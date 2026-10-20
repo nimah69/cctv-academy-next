@@ -87,6 +87,49 @@ try {
   await page.locator("[data-open-workshops]").click();
   await page.waitForFunction(() => document.querySelector("#wsOverlay")?.style.display === "flex");
   await page.frameLocator("#wsFrame").locator("#trouble").waitFor({ state: "visible", timeout: 15000 });
+
+  // Exercise the reset control in each top-level interactive workshop.
+  const workshopFrame = page.frameLocator("#wsFrame");
+  const workshopIds = await workshopFrame.locator("section.workshop").evaluateAll((nodes) => nodes.map((node) => node.id));
+  assert.equal(workshopIds.length, 8, "all eight top-level workshop sections must be present");
+  for (const id of workshopIds) {
+    const section = workshopFrame.locator(`section.workshop#${id}`);
+    const reset = section.locator("[data-workshop-reset]");
+    assert.equal(await reset.count(), 1, `${id}: exactly one reset control is expected`);
+    const control = section.locator('input[type="text"], input[type="number"], input[type="range"], select, textarea').first();
+    if (await control.count()) {
+      const original = await control.evaluate((el) => {
+        if (el instanceof HTMLSelectElement) {
+          const selected = [...el.options].find((option) => option.defaultSelected);
+          return selected ? selected.value : (el.options[0]?.value ?? "");
+        }
+        return el.defaultValue ?? "";
+      });
+      await control.evaluate((el) => {
+        if (el instanceof HTMLSelectElement) {
+          if (el.options.length > 1) el.selectedIndex = (el.selectedIndex + 1) % el.options.length;
+        } else if (el instanceof HTMLInputElement && (el.type === "number" || el.type === "range")) {
+          const min = el.min === "" ? 0 : Number(el.min);
+          const max = el.max === "" ? 999999 : Number(el.max);
+          const current = Number(el.value || min);
+          let next = current + 1;
+          if (next > max) next = current - 1;
+          if (next < min) next = min;
+          el.value = String(next);
+        } else {
+          el.value = "__audit_reset_test__";
+        }
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      await reset.click();
+      const current = await control.evaluate((el) => el.value);
+      assert.equal(current, original, `${id}: reset must restore the first control's default value`);
+    } else {
+      await reset.click();
+    }
+  }
+
   await page.locator("#wsClose").click();
   await page.waitForFunction(() => document.querySelector("#wsOverlay")?.style.display === "none");
 
