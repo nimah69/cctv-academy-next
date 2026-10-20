@@ -81,6 +81,19 @@ try {
   assert.notEqual(passText, failText, "pass and fail outcomes must produce different feedback");
   assert.ok(failText.includes(scenario.why));
 
+  // User-controlled IPv4 input must be validated before being rendered into HTML.
+  await page.goto(baseUrl + "#/tools", { waitUntil: "domcontentloaded" });
+  await page.locator("#subnetIp").waitFor({ state: "visible", timeout: 10000 });
+  await page.evaluate(() => { window.__xssAudit = 0; });
+  await page.locator("#subnetIp").fill('<img src=x onerror="window.__xssAudit=1">');
+  await page.locator("#subnetResult").waitFor();
+  assert.equal(await page.evaluate(() => window.__xssAudit), 0,
+    "invalid IPv4 input must not execute HTML event handlers");
+  assert.equal(await page.locator("#subnetResult img").count(), 0,
+    "invalid IPv4 input must not be inserted as HTML");
+  await page.locator("#subnetIp").fill("192.168.10.25");
+  await page.locator("#subnetResult").getByText("192.168.10.0").waitFor();
+
   // Test the workshop iframe opens and closes on a mobile viewport.
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator("#menuBtn").click();
