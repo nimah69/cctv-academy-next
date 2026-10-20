@@ -83,6 +83,7 @@ try {
 
   // User-controlled IPv4 input must be validated before being rendered into HTML.
   await page.goto(baseUrl + "#/tools", { waitUntil: "domcontentloaded" });
+  await page.locator('[data-tool="subnet"]').click();
   await page.locator("#subnetIp").waitFor({ state: "visible", timeout: 10000 });
   await page.evaluate(() => { window.__xssAudit = 0; });
   await page.locator("#subnetIp").fill('<img src=x onerror="window.__xssAudit=1">');
