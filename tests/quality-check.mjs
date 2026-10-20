@@ -81,7 +81,7 @@ for (const chapter of chapters) {
   assert.ok(chapter.id && chapter.title, "each chapter needs an id and title");
   assert.ok(Array.isArray(chapter.sections) && chapter.sections.length > 0, `${chapter.title}: sections are required`);
   assert.ok(Array.isArray(chapter.quiz) && chapter.quiz.length > 0, `${chapter.title}: quiz questions are required`);
-  const expandedChapterIds = new Set(["physical-environment-security", "cctv-cybersecurity", "backup-disaster-recovery", "risk-management", "standards-frameworks", "technical-interview"]);
+  const expandedChapterIds = new Set(["physical-environment-security", "cctv-cybersecurity", "backup-disaster-recovery", "risk-management", "standards-frameworks", "technical-interview", "advanced-concepts"]);
   if (expandedChapterIds.has(chapter.id)) {
     assert.equal(chapter.quiz.length, 25, `${chapter.title}: expected 25 questions after content expansion`);
     assert.equal(chapter.quiz.filter((question) => question.kind === "تکمیلی").length, 18,
