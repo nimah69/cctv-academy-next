@@ -4865,6 +4865,11 @@ var q=0;new MutationObserver(function(){clearTimeout(q);q=setTimeout(rt,200)}).o
 body:has(.lesson-content) #uxFs{display:flex}
 #uxFs button{width:38px;height:38px;border:0;border-radius:50%;background:transparent;color:var(--ink,#eaf2ff);font-weight:700;font-size:14px}
 #uxFs button:hover{background:var(--soft,#142b43)}
+/* Keep floating reading controls above the persistent mobile navigation and device safe area. */
+@media(max-width:850px){
+#uxTop{inset-block-end:calc(84px + env(safe-area-inset-bottom,0px))}
+#uxFs{inset-block-end:calc(140px + env(safe-area-inset-bottom,0px))}
+}
 @media print{
 .side,.top,.bottom-nav,.sidebar-backdrop,#uxFs,.lesson-actions,.lesson-progress-sticky{display:none!important}
 .app{display:block!important}
