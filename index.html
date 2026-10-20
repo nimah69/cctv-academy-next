@@ -4819,9 +4819,11 @@ if(pr.dataset.uxc||pr.textContent.trim().length<8)return;pr.dataset.uxc="1";
 var b=D.createElement("button");b.type="button";b.className="ux-copy";b.textContent="کپی";
 b.addEventListener("click",function(){var x=pr.cloneNode(true),c=x.querySelector(".ux-copy");if(c)c.remove();var s=x.textContent.trim();
 function ok(){b.textContent="کپی شد ✓";setTimeout(function(){b.textContent="کپی"},1500)}
-if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(ok,function(){})}});
+function failed(){b.textContent="کپی ناموفق بود";b.setAttribute("aria-label","کپی ناموفق بود؛ متن را دستی انتخاب کنید");setTimeout(function(){b.textContent="کپی";b.setAttribute("aria-label","کپی کد")},2500)}
+function fallback(){var ta=D.createElement("textarea");ta.value=s;ta.setAttribute("readonly","");ta.setAttribute("aria-label","متن برای کپی دستی");ta.style.cssText="position:fixed;left:8px;bottom:8px;width:min(90vw,560px);height:120px;z-index:100000;background:#fff;color:#111;border:2px solid #0ea5e9;border-radius:8px;padding:8px";D.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);var copied=false;try{copied=D.execCommand("copy")}catch(e){}if(copied){ta.remove();ok()}else{b.textContent="متن را دستی کپی کنید";ta.addEventListener("blur",function(){ta.remove()},{once:true})}}
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(ok,fallback)}else fallback()});
 pr.appendChild(b)});
-D.querySelectorAll("a[href^='http']").forEach(function(a){a.target="_blank";a.rel="noopener noreferrer"})}
+D.querySelectorAll(".lesson-content a[href^='http']").forEach(function(a){a.target="_blank";a.rel="noopener noreferrer"})}
 var q=0;new MutationObserver(function(){clearTimeout(q);q=setTimeout(dec,200)}).observe(D.body,{childList:true,subtree:true});dec();
 }catch(e){}
 })();
