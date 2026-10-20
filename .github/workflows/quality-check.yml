@@ -22,3 +22,4 @@ jobs:
         run: |
           node tests/quality-check.mjs
           node tests/calculation-check.mjs
+          node tests/workshop-calculation-check.mjs
