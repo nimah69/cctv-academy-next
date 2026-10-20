@@ -19,4 +19,6 @@ jobs:
         with:
           node-version: 20
       - name: Run static quality checks
-        run: node tests/quality-check.mjs
+        run: |
+          node tests/quality-check.mjs
+          node tests/calculation-check.mjs
