@@ -145,6 +145,49 @@ try {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     "chapter lab must not introduce horizontal overflow at 1280px");
 
+  // Corrupt progress JSON must be backed up instead of silently discarded.
+  await page.evaluate(() => localStorage.setItem("cctvAcademyProgressV1", "{broken-json"));
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.locator("#view .cl-hero").waitFor({ state: "visible", timeout: 10000 });
+  const corruptBackup = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((item) => item.startsWith("cctvAcademyProgressV1.corruptBackup."));
+    return key ? { key, value: localStorage.getItem(key) } : null;
+  });
+  assert.ok(corruptBackup, "corrupt progress must be preserved under a backup key");
+  assert.equal(corruptBackup.value, "{broken-json");
+  await page.locator('[role="status"]').filter({ hasText: "داده پیشرفت قابل خواندن نبود" }).waitFor({ state: "visible" });
+
+  // Simulate quota/security failure: UI must not claim progress was persisted.
+  const failingContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    deviceScaleFactor: 1
+  });
+  await failingContext.addInitScript(() => {
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "cctvAcademyProgressV1") {
+        throw new DOMException("QuotaExceededError", "QuotaExceededError");
+      }
+      return originalSetItem.call(this, key, value);
+    };
+  });
+  const failingPage = await failingContext.newPage();
+  failingPage.on("pageerror", (error) => pageErrors.push(error.message));
+  await failingPage.goto(baseUrl + "#/lab/1", { waitUntil: "domcontentloaded" });
+  await failingPage.locator("#view .cl-hero").waitFor({ state: "visible", timeout: 10000 });
+  const failingScenario = await failingPage.evaluate(() => window.CCTVChapterLabs[0][0]);
+  await failingPage.locator(".cl-answer").nth(failingScenario.answer).click();
+  await failingPage.getByRole("button", { name: "بررسی پاسخ من" }).click();
+  await failingPage.locator(".cl-feedback.is-correct").waitFor({ state: "visible" });
+  await failingPage.locator('[role="status"]').filter({ hasText: "ذخیره پیشرفت روی این دستگاه ناموفق بود" }).waitFor({ state: "visible" });
+  const failingFeedback = await failingPage.locator(".cl-feedback.is-correct").innerText();
+  assert.ok(failingFeedback.includes("ذخیره‌سازی روی دستگاه ناموفق بود"),
+    "correct answer feedback must not falsely claim persistence when storage fails");
+  assert.equal(await failingPage.evaluate(() => localStorage.getItem("cctvAcademyProgressV1")), null);
+  await failingContext.close();
+
   assert.deepEqual(pageErrors, [], `uncaught browser errors: ${pageErrors.join("; ")}`);
   console.log("Browser smoke checks passed.");
   console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, workshop iframe open/close and blocked external fonts.");
