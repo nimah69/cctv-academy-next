@@ -145,17 +145,28 @@ try {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     "chapter lab must not introduce horizontal overflow at 1280px");
 
-  // Corrupt progress JSON must be backed up instead of silently discarded.
-  await page.evaluate(() => localStorage.setItem("cctvAcademyProgressV1", "{broken-json"));
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator("#view .cl-hero").waitFor({ state: "visible", timeout: 10000 });
-  const corruptBackup = await page.evaluate(() => {
+  // Corrupt progress JSON must be backed up before the app's own unload handlers can rewrite it.
+  const corruptContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    deviceScaleFactor: 1
+  });
+  await corruptContext.addInitScript(() => {
+    localStorage.setItem("cctvAcademyProgressV1", "{broken-json");
+  });
+  const corruptPage = await corruptContext.newPage();
+  corruptPage.on("pageerror", (error) => pageErrors.push(error.message));
+  await corruptPage.goto(baseUrl + "#/lab/1", { waitUntil: "domcontentloaded" });
+  await corruptPage.locator("#view .cl-hero").waitFor({ state: "visible", timeout: 10000 });
+  const corruptBackup = await corruptPage.evaluate(() => {
     const key = Object.keys(localStorage).find((item) => item.startsWith("cctvAcademyProgressV1.corruptBackup."));
     return key ? { key, value: localStorage.getItem(key) } : null;
   });
   assert.ok(corruptBackup, "corrupt progress must be preserved under a backup key");
   assert.equal(corruptBackup.value, "{broken-json");
-  await page.locator('[role="status"]').filter({ hasText: "داده پیشرفت قابل خواندن نبود" }).waitFor({ state: "visible" });
+  await corruptPage.locator('[role="status"]').filter({ hasText: "داده پیشرفت قابل خواندن نبود" }).waitFor({ state: "visible" });
+  await corruptContext.close();
 
   // Simulate quota/security failure: UI must not claim progress was persisted.
   const failingContext = await browser.newContext({
