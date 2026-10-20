@@ -33,6 +33,15 @@ assert.ok(Math.abs(shortPoE.resistanceOhm - 0.938) < 1e-9);
 assert.ok(Math.abs(shortPoE.pseW - (12 + shortPoE.lossW)) < 1e-9);
 assert.ok(shortPoE.vPdV > 49 && shortPoE.vPdV < 50);
 
+const copperLong = api.solveLink({ type: "at", pdW: 12, lengthM: 100, material: "cu", tempC: 20 });
+const ccaLong = api.solveLink({ type: "at", pdW: 12, lengthM: 100, material: "cca", tempC: 20 });
+assert.ok(Math.abs(ccaLong.resistanceOhm / copperLong.resistanceOhm - 1.575) < 1e-9,
+  "CCA model must use the documented 1.575 planning factor");
+const ccaNoteAt = nestedHtml.lastIndexOf("CCA_FACTOR");
+assert.ok(ccaNoteAt > 0);
+assert.match(nestedHtml.slice(Math.max(0, ccaNoteAt - 250), ccaNoteAt), /1\\.575/,
+  "the UI explanation must match the calculation factor");
+
 const longPoE = api.solveLink({ type: "at", pdW: 25, lengthM: 100, material: "cca", tempC: 50 });
 assert.equal(longPoE.status, "fail");
 assert.ok(longPoE.reasons.length > 0, "failed PoE link must explain the limiting conditions");
