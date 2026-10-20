@@ -50,6 +50,8 @@ assert.match(mainScript, /chapterLabSimulatorFeedback\(s,simResult\)/, "simulato
 
 const feedbackSource = extractFunction(mainScript, "chapterLabSimulatorFeedback");
 const feedback = new Function(`return (${feedbackSource});`)();
+const decisionSource = extractFunction(mainScript, "chapterLabDecisionFeedback");
+const decisionFeedback = new Function(`return (${decisionSource});`)();
 const retrySource = extractFunction(mainScript, "retryChapterLabScenario");
 const chapters = extractArrayAfter("window.CCTVAcademyData={chapters:");
 const labs = extractArrayAfter("window.CCTVChapterLabs =");
@@ -57,6 +59,17 @@ assert.equal(labs.length, chapters.length);
 let scenarioCount = 0;
 for (let ci = 0; ci < labs.length; ci += 1) {
   for (const scenario of labs[ci]) {
+    assert.equal(decisionFeedback(scenario, scenario.answer), scenario.why,
+      `correct option must return the scenario's specific rationale: ${scenario.title}`);
+    const wrongAnalyses = scenario.options
+      .map((option, index) => ({ option, index, text: decisionFeedback(scenario, index) }))
+      .filter((entry) => entry.index !== scenario.answer);
+    assert.equal(new Set(wrongAnalyses.map((entry) => entry.text)).size, 3,
+      `the three wrong-option analyses must be distinct: ${scenario.title}`);
+    for (const entry of wrongAnalyses) {
+      assert.ok(entry.text.includes(entry.option), `wrong-option analysis must name its option: ${scenario.title}`);
+      assert.ok(entry.text.includes(scenario.clue), `wrong-option analysis must guide to the next step: ${scenario.title}`);
+    }
     const pass = feedback(scenario, "pass");
     const fail = feedback(scenario, "fail");
     assert.notEqual(pass, fail, `pass/fail feedback must differ: ${scenario.title}`);
@@ -93,5 +106,5 @@ assert.equal(saves, 1);
 assert.equal(renders, 1);
 
 console.log("Chapter-lab interaction checks passed.");
-console.log(`Scenario feedback checked: ${scenarioCount}; retry clears both persisted answer and simulator result.`);
+console.log(`Scenario feedback checked: ${scenarioCount}; wrong-option analyses checked: ${scenarioCount * 3}; retry clears both persisted answer and simulator result.`);
 console.log("Scope: pure interaction logic only; actual mobile/browser presentation remains untested.");
