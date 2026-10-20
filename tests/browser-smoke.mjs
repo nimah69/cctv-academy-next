@@ -82,7 +82,7 @@ try {
   assert.ok(failText.includes(scenario.why));
 
   // Test the workshop iframe opens and closes on a mobile viewport.
-  await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator("#menuBtn").click();
   await page.locator("[data-open-workshops]").click();
   await page.waitForFunction(() => document.querySelector("#wsOverlay")?.style.display === "flex");
