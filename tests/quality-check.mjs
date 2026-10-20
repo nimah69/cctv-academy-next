@@ -81,6 +81,12 @@ for (const chapter of chapters) {
   assert.ok(chapter.id && chapter.title, "each chapter needs an id and title");
   assert.ok(Array.isArray(chapter.sections) && chapter.sections.length > 0, `${chapter.title}: sections are required`);
   assert.ok(Array.isArray(chapter.quiz) && chapter.quiz.length > 0, `${chapter.title}: quiz questions are required`);
+  const expandedChapterIds = new Set(["physical-environment-security", "cctv-cybersecurity", "backup-disaster-recovery"]);
+  if (expandedChapterIds.has(chapter.id)) {
+    assert.equal(chapter.quiz.length, 25, `${chapter.title}: expected 25 questions after content expansion`);
+    assert.equal(chapter.quiz.filter((question) => question.kind === "تکمیلی").length, 18,
+      `${chapter.title}: added questions must be marked as supplementary`);
+  }
 
   for (const question of chapter.quiz) {
     assert.ok(typeof question.q === "string" && question.q.trim(), `${chapter.title}: question text is required`);
