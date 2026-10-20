@@ -199,6 +199,35 @@ try {
   assert.equal(await failingPage.evaluate(() => localStorage.getItem("cctvAcademyProgressV1")), null);
   await failingContext.close();
 
+  // Imported/stored progress fields must be rendered as text, never executable HTML.
+  const xssPayload = '<img src=x onerror="window.__academyXss=true">';
+  const xssContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await xssContext.addInitScript((payload) => {
+    if (location.protocol === "http:" || location.protocol === "https:") {
+      window.__academyXss = false;
+      localStorage.setItem("cctvAcademyProgressV1", JSON.stringify({
+        done: [], scores: {}, labs: {}, comprehensive: null,
+        wrongQuestions: [{
+          chapter: 0, qi: 0, q: payload, tag: payload,
+          selectedAnswer: payload, correctAnswer: payload,
+          e: payload, savedAt: new Date().toISOString()
+        }],
+        studyPosition: null, microLessons: {}, microBookmarks: {}
+      }));
+    }
+  }, xssPayload);
+  const xssPage = await xssContext.newPage();
+  xssPage.on("pageerror", (error) => pageErrors.push(error.message));
+  await xssPage.goto(baseUrl + "#/saved", { waitUntil: "domcontentloaded" });
+  await xssPage.locator(".review-card h3").waitFor({ state: "visible", timeout: 10000 });
+  assert.ok((await xssPage.locator(".review-card h3").first().innerText()).includes(xssPayload),
+    "untrusted question text should remain visible as escaped text");
+  assert.equal(await xssPage.locator(".review-card img").count(), 0,
+    "untrusted progress data must not create executable image elements");
+  assert.equal(await xssPage.evaluate(() => window.__academyXss), false,
+    "stored progress data must not execute an event-handler payload");
+  await xssContext.close();
+
   assert.deepEqual(pageErrors, [], `uncaught browser errors: ${pageErrors.join("; ")}`);
   console.log("Browser smoke checks passed.");
   console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, workshop iframe open/close and blocked external fonts.");
