@@ -3222,7 +3222,8 @@ function chapterLabDecisionFeedback(s,index){
  ];
  return framing[index%3]+reason+" گام مناسب‌تر برای این سناریو: "+s.clue;
 }
-function chapterLabSimulatorFeedback(s,outcome){var status=outcome==="pass"?"نتیجه طبیعی ثبت شد.":"نشانه مشکل ثبت شد.";var interpretation=outcome==="pass"?"این مشاهده فقط همان آزمون را تأیید می‌کند و سلامت کل سامانه را ثابت نمی‌کند.":"این مشاهده با انتظار اولیه سازگار نیست؛ علت را قطعی ندان و آزمون بعدی را انجام بده.";return status+" آزمون منتخب: "+s.check+". تفسیر فنی: "+s.why+" گام بعدی: "+s.clue+" "+interpretation+" این نتیجه آموزشی و فرضی است و به تجهیزات واقعی متصل نیست.";}\nfunction chapterLabHTML(){
+function chapterLabSimulatorFeedback(s,outcome){var status=outcome==="pass"?"نتیجه طبیعی ثبت شد.":"نشانه مشکل ثبت شد.";var interpretation=outcome==="pass"?"این مشاهده فقط همان آزمون را تأیید می‌کند و سلامت کل سامانه را ثابت نمی‌کند.":"این مشاهده با انتظار اولیه سازگار نیست؛ علت را قطعی ندان و آزمون بعدی را انجام بده.";return status+" آزمون منتخب: "+s.check+". تفسیر فنی: "+s.why+" گام بعدی: "+s.clue+" "+interpretation+" این نتیجه آموزشی و فرضی است و به تجهیزات واقعی متصل نیست.";}
+function chapterLabHTML(){
  var chapter=state.chapter,bank=window.CCTVChapterLabs||[],scenarios=bank[chapter]||[],c=(typeof chapters!=="undefined"&&chapters[chapter])||{title:"فصل "+(chapter+1)};
  if(scenarios.length!==5)return '<section class="panel"><h2>تمرین‌های این فصل</h2><p>تمرین‌ها بارگذاری نشدند؛ صفحه را تازه‌سازی کن.</p><button class="secondary" onclick="go(\'lesson\','+chapter+')">بازگشت به درس</button></section>';
  var idx=Math.max(0,Math.min(4,Number(state.labScenario)||0)),s=scenarios[idx],key=chapter+":"+idx,saved=state.progress.labs[key]||null,answered=!!(saved&&saved.checked),chosen=state.labDraft!==null&&state.labDraft!==undefined?state.labDraft:(saved?saved.answer:null);
