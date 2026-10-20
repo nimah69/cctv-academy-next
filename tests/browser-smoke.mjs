@@ -93,6 +93,7 @@ try {
   const workshopIds = await workshopFrame.locator("section.workshop").evaluateAll((nodes) => nodes.map((node) => node.id));
   assert.equal(workshopIds.length, 8, "all eight top-level workshop sections must be present");
   for (const id of workshopIds) {
+    await workshopFrame.locator(`.tab[data-tab="${id}"]`).click();
     const section = workshopFrame.locator(`section.workshop#${id}`);
     const reset = section.locator("[data-workshop-reset]");
     assert.equal(await reset.count(), 1, `${id}: exactly one reset control is expected`);
