@@ -23,3 +23,4 @@ jobs:
           node tests/quality-check.mjs
           node tests/calculation-check.mjs
           node tests/workshop-calculation-check.mjs
+          node tests/lab-interaction-check.mjs
