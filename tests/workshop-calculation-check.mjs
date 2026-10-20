@@ -39,7 +39,7 @@ assert.ok(Math.abs(ccaLong.resistanceOhm / copperLong.resistanceOhm - 1.575) < 1
   "CCA model must use the documented 1.575 planning factor");
 const ccaNoteAt = nestedHtml.lastIndexOf("CCA_FACTOR");
 assert.ok(ccaNoteAt > 0);
-assert.match(nestedHtml.slice(Math.max(0, ccaNoteAt - 250), ccaNoteAt), /1\\.575/,
+assert.match(nestedHtml.slice(Math.max(0, ccaNoteAt - 250), ccaNoteAt), /1\.575/,
   "the UI explanation must match the calculation factor");
 
 const longPoE = api.solveLink({ type: "at", pdW: 25, lengthM: 100, material: "cca", tempC: 50 });
