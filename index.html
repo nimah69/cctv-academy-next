@@ -3217,8 +3217,8 @@ function chapterLabDecisionFeedback(s,index){
  var reason=reasons[kind][Math.max(0,Math.min(2,index> s.answer ? index-1 : index))];
  var framing=[
   "دلیل رد گزینهٔ «"+option+"»: ",
-  "این گزینه با وضعیت «"+s.context+"» سازگاری کافی ندارد. ",
-  "با توجه به نشانهٔ «"+s.check+"»، "
+  "گزینهٔ «"+option+"» با وضعیت «"+s.context+"» سازگاری کافی ندارد. ",
+  "با توجه به گزینهٔ «"+option+"» و نشانهٔ «"+s.check+"»، "
  ];
  return framing[index%3]+reason+" گام مناسب‌تر برای این سناریو: "+s.clue;
 }
