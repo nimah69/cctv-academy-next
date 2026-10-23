@@ -11,9 +11,25 @@ import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const html = readFileSync(resolve(process.cwd(), "index.html"));
+const assets = {
+  "/assets/data/cctv-data.js": { file: "assets/data/cctv-data.js", type: "text/javascript" },
+  "/sw.js": { file: "sw.js", type: "text/javascript" },
+  "/manifest.json": { file: "manifest.json", type: "application/manifest+json" },
+  "/fonts/vazirmatn.css": { file: "fonts/vazirmatn.css", type: "text/css" },
+  "/fonts/vazirmatn-arabic-var.woff2": { file: "fonts/vazirmatn-arabic-var.woff2", type: "font/woff2" },
+  "/fonts/vazirmatn-latin-var.woff2": { file: "fonts/vazirmatn-latin-var.woff2", type: "font/woff2" },
+  "/icons/icon-192.png": { file: "icons/icon-192.png", type: "image/png" },
+  "/icons/icon-512.png": { file: "icons/icon-512.png", type: "image/png" }
+};
 const server = createServer((request, response) => {
   const pathname = (request.url || "/").split("?")[0];
   if (pathname !== "/") {
+    const asset = assets[pathname];
+    if (asset) {
+      response.writeHead(200, { "content-type": asset.type });
+      response.end(readFileSync(resolve(process.cwd(), asset.file)));
+      return;
+    }
     response.writeHead(404);
     response.end("Not found");
     return;

@@ -3,14 +3,15 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const html = readFileSync(resolve(process.cwd(), "index.html"), "utf8");
+const dataSource = html + "\n" + readFileSync(resolve(process.cwd(), "assets/data/cctv-data.js"), "utf8");
 function extractArrayAfter(marker) {
-  const markerIndex = html.indexOf(marker);
+  const markerIndex = dataSource.indexOf(marker);
   assert.notEqual(markerIndex, -1, `missing data marker: ${marker}`);
-  const start = html.indexOf("[", markerIndex + marker.length - 1);
+  const start = dataSource.indexOf("[", markerIndex + marker.length - 1);
   assert.notEqual(start, -1);
   let depth = 0, inString = false, escaped = false;
-  for (let i = start; i < html.length; i += 1) {
-    const char = html[i];
+  for (let i = start; i < dataSource.length; i += 1) {
+    const char = dataSource[i];
     if (inString) {
       if (escaped) escaped = false;
       else if (char === "\\") escaped = true;
@@ -19,7 +20,7 @@ function extractArrayAfter(marker) {
     }
     if (char === '"') inString = true;
     else if (char === "[") depth += 1;
-    else if (char === "]" && --depth === 0) return JSON.parse(html.slice(start, i + 1));
+    else if (char === "]" && --depth === 0) return JSON.parse(dataSource.slice(start, i + 1));
   }
   throw new Error(`unterminated array after ${marker}`);
 }

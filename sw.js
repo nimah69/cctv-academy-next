@@ -5,6 +5,7 @@ const CACHE = "cctv-academy-v1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
+  "./assets/data/cctv-data.js",
   "./manifest.json",
   "./fonts/vazirmatn-arabic-var.woff2",
   "./fonts/vazirmatn-latin-var.woff2",

@@ -18,6 +18,7 @@ const server = createServer((request, response) => {
     const assets = {
       "/sw.js": { file: "sw.js", type: "text/javascript" },
       "/index.html": { file: "index.html", type: "text/html; charset=utf-8" },
+      "/assets/data/cctv-data.js": { file: "assets/data/cctv-data.js", type: "text/javascript" },
       "/manifest.json": { file: "manifest.json", type: "application/manifest+json" },
       "/fonts/vazirmatn-arabic-var.woff2": { file: "fonts/vazirmatn-arabic-var.woff2", type: "font/woff2" },
       "/fonts/vazirmatn-latin-var.woff2": { file: "fonts/vazirmatn-latin-var.woff2", type: "font/woff2" },

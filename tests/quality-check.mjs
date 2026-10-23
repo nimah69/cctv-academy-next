@@ -12,13 +12,21 @@ assert.match(html, /setAttribute\(["']lang["'],\s*["']fa["']\)/, "Persian langua
 assert.match(html, /setAttribute\(["']dir["'],\s*["']rtl["']\)/, "RTL direction is configured");
 
 const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
+// Extracted pure data must still load before its first inline consumer.
+const dataScriptTagIndex = html.indexOf('<script src="./assets/data/cctv-data.js"></script>');
+const firstDataConsumerIndex = html.indexOf("window.CCTVAcademyData.chapters[");
+assert.ok(dataScriptTagIndex !== -1, "index.html must reference assets/data/cctv-data.js");
+assert.ok(firstDataConsumerIndex === -1 || dataScriptTagIndex < firstDataConsumerIndex,
+  "assets/data/cctv-data.js must be declared before code reading window.CCTVAcademyData");
+new Function(readFileSync(resolve(process.cwd(), "assets/data/cctv-data.js"), "utf8"));
+const allScriptSources = scripts.map((s) => s[1]).concat([readFileSync(resolve(process.cwd(), "assets/data/cctv-data.js"), "utf8")]);
 assert.ok(scripts.length > 0, "at least one inline script exists");
 
 const syntaxErrors = [];
-for (let i = 0; i < scripts.length; i += 1) {
+for (let i = 0; i < allScriptSources.length; i += 1) {
   try {
     // Parse only. Never execute application scripts in this test.
-    new Function(scripts[i][1]);
+    new Function(allScriptSources[i]);
   } catch (error) {
     syntaxErrors.push(`script #${i + 1}: ${error.message}`);
   }
@@ -47,16 +55,16 @@ for (const [name, pattern] of requiredMarkers) {
 }
 
 function extractJsonArrayAfter(marker) {
-  const markerIndex = html.indexOf(marker);
+  const markerIndex = dataSource.indexOf(marker);
   assert.notEqual(markerIndex, -1, `data marker not found: ${marker}`);
-  const start = html.indexOf("[", markerIndex + marker.length - 1);
+  const start = dataSource.indexOf("[", markerIndex + marker.length - 1);
   assert.notEqual(start, -1, `array not found after marker: ${marker}`);
 
   let depth = 0;
   let inString = false;
   let escaped = false;
-  for (let i = start; i < html.length; i += 1) {
-    const char = html[i];
+  for (let i = start; i < dataSource.length; i += 1) {
+    const char = dataSource[i];
     if (inString) {
       if (escaped) escaped = false;
       else if (char === "\\") escaped = true;
@@ -67,12 +75,13 @@ function extractJsonArrayAfter(marker) {
     else if (char === "[") depth += 1;
     else if (char === "]") {
       depth -= 1;
-      if (depth === 0) return JSON.parse(html.slice(start, i + 1));
+      if (depth === 0) return JSON.parse(dataSource.slice(start, i + 1));
     }
   }
   throw new Error(`unterminated JSON array after marker: ${marker}`);
 }
 
+const dataSource = html + "\n" + readFileSync(resolve(process.cwd(), "assets/data/cctv-data.js"), "utf8");
 const chapters = extractJsonArrayAfter("window.CCTVAcademyData={chapters:");
 assert.equal(chapters.length, 14, "the known course structure must contain 14 chapters");
 
