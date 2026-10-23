@@ -24,3 +24,4 @@ jobs:
           node tests/calculation-check.mjs
           node tests/workshop-calculation-check.mjs
           node tests/lab-interaction-check.mjs
+          node tests/smart-review-check.mjs

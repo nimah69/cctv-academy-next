@@ -99,6 +99,33 @@ try {
   assert.notEqual(passText, failText, "pass and fail outcomes must produce different feedback");
   assert.ok(failText.includes(scenario.why));
 
+  // Smart review: seed one due wrong question, then run a reveal-then-grade session end-to-end.
+  await page.evaluate(() => {
+    const seeded = window.CCTVAcademyData.chapters[0].quiz[0];
+    let progress = {};
+    try { progress = JSON.parse(localStorage.getItem("cctvAcademyProgressV1") || "{}") || {}; } catch { progress = {}; }
+    if (Array.isArray(progress) || typeof progress !== "object") progress = {};
+    progress.wrongQuestions = [{
+      ...seeded, selectedAnswer: seeded.o[(seeded.a + 1) % seeded.o.length], correctAnswer: seeded.o[seeded.a],
+      savedAt: new Date(Date.now() - 86400000).toISOString()
+    }];
+    localStorage.setItem("cctvAcademyProgressV1", JSON.stringify(progress));
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.goto(baseUrl + "#/review", { waitUntil: "domcontentloaded" });
+  await page.locator("#view .quiz-question").waitFor({ state: "visible", timeout: 10000 });
+  await page.locator(".quiz-question input[type=radio]").first().click();
+  await page.locator(".quiz-question .lesson-actions").waitFor({ state: "visible" });
+  await page.getByRole("button", { name: /پیشنهادی/ }).first().click();
+  await page.locator("#view").getByText("جلسهٔ مرور تمام شد").waitFor({ state: "visible", timeout: 10000 });
+  const reviewPersisted = await page.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem("cctvAcademyProgressV1") || "{}");
+    return Boolean((stored.wrongQuestions[0].review || {}).lastGrade);
+  });
+  assert.ok(reviewPersisted, "session grading must persist the review schedule");
+  await page.getByRole("button", { name: "بازگشت به مرور و پیشرفت" }).click();
+  await page.locator("#view .review-session-card").waitFor({ state: "visible" }).catch(() => {});
+
   // Test the workshop iframe opens and closes on a mobile viewport.
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator("#menuBtn").click();
@@ -217,7 +244,7 @@ try {
 
   assert.deepEqual(pageErrors, [], `uncaught browser errors: ${pageErrors.join("; ")}`);
   console.log("Browser smoke checks passed.");
-  console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, workshop iframe open/close, service-worker takeover and full offline reload.");
+  console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, smart review session (reveal-then-grade, persisted schedule), workshop iframe open/close, service-worker takeover and full offline reload.");
 } finally {
   if (browser) await browser.close();
   await new Promise((resolveClose) => server.close(resolveClose));
