@@ -24,3 +24,5 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser smoke tests
         run: node tests/browser-smoke.mjs
+      - name: Run XSS/data-flow checks
+        run: node tests/xss-check.mjs
