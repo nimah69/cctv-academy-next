@@ -125,6 +125,26 @@ for (let i = 0; i < labGroups.length; i += 1) {
   }
 }
 
+// PWA / offline assets
+const manifest = JSON.parse(readFileSync(resolve(process.cwd(), "manifest.json"), "utf8"));
+assert.ok(manifest.name && manifest.lang === "fa", "manifest.json has a Persian app name");
+assert.ok(manifest.hasOwnProperty("start_url"), "manifest.json declares start_url");
+assert.ok(["standalone","fullscreen","minimal-ui"].includes(manifest.display), "manifest.json works as an installed app");
+assert.ok(manifest.icons.some((icon) => icon.sizes === "192x192") && manifest.icons.some((icon) => icon.sizes === "512x512"), "manifest.json provides 192px and 512px icons");
+assert.match(html, /rel=["']manifest["']/, "index.html links the web manifest");
+
+const swSource = readFileSync(resolve(process.cwd(), "sw.js"), "utf8");
+assert.match(swSource, /const CACHE = "cctv-academy-/,"service worker uses a versioned cache name");
+assert.match(swSource, /caches\.keys\(\)[\s\S]*caches\.delete\(/,"service worker clears outdated caches on activate");
+assert.match(swSource, /request\.mode === "navigate"/,"service worker gives navigations a network-first fallback");
+assert.match(html, /navigator\.serviceWorker\.register\(\s*["']\.\/sw\.js["']/,"index.html registers the service worker");
+assert.ok(!/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(html), "no external font dependency may remain (offline requirement)");
+for (const font of ["fonts/vazirmatn-arabic-var.woff2","fonts/vazirmatn-latin-var.woff2"]) {
+  const bytes = readFileSync(resolve(process.cwd(), font));
+  assert.ok(bytes.length > 10_000, `${font} exists and holds the variable font`);
+}
+assert.match(html, /@font-face\{[^}]*"Vazirmatn"[^}]*unicode-range/, "index.html declares the local Vazirmatn @font-face");
+
 console.log("Static quality check passed.");
 console.log(`File: index.html (${size.toLocaleString("en-US")} bytes)`);
 console.log(`Inline scripts parsed: ${scripts.length}`);

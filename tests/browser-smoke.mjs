@@ -14,6 +14,23 @@ const server = createServer((request, response) => {
     return;
   }
   if (pathname !== "/") {
+    // Serve the real PWA assets (sw.js, manifest.json, fonts, icons) from the repo directory.
+    const assets = {
+      "/sw.js": { file: "sw.js", type: "text/javascript" },
+      "/index.html": { file: "index.html", type: "text/html; charset=utf-8" },
+      "/manifest.json": { file: "manifest.json", type: "application/manifest+json" },
+      "/fonts/vazirmatn-arabic-var.woff2": { file: "fonts/vazirmatn-arabic-var.woff2", type: "font/woff2" },
+      "/fonts/vazirmatn-latin-var.woff2": { file: "fonts/vazirmatn-latin-var.woff2", type: "font/woff2" },
+      "/fonts/vazirmatn.css": { file: "fonts/vazirmatn.css", type: "text/css" },
+      "/icons/icon-192.png": { file: "icons/icon-192.png", type: "image/png" },
+      "/icons/icon-512.png": { file: "icons/icon-512.png", type: "image/png" }
+    };
+    const asset = assets[pathname];
+    if (asset) {
+      response.writeHead(200, { "content-type": asset.type });
+      response.end(readFileSync(resolve(process.cwd(), asset.file)));
+      return;
+    }
     response.writeHead(404);
     response.end("Not found");
     return;
@@ -134,10 +151,19 @@ try {
   await page.locator("#wsClose").click();
   await page.waitForFunction(() => document.querySelector("#wsOverlay")?.style.display === "none");
 
-  // Essential content must remain usable when external font services are blocked.
-  await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, (route) => route.abort());
+  // Fonts must be local: block every request outside localhost and reload — content must still be fine.
+  await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
   await page.goto(baseUrl + "#/lab/1", { waitUntil: "domcontentloaded" });
   await page.locator("#view .cl-hero").waitFor({ state: "visible", timeout: 10000 });
+
+  // PWA: the service worker takes control, then the app must reload fully offline.
+  if (process.env.SMOKETEST_OFFLINE !== "skip") {
+    await page.waitForFunction(() => navigator.serviceWorker?.controller !== null, null, { timeout: 15000 });
+    await context.setOffline(true);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#view .cl-hero").waitFor({ state: "visible", timeout: 15000 });
+    await context.setOffline(false);
+  }
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.reload({ waitUntil: "domcontentloaded" });
@@ -190,7 +216,7 @@ try {
 
   assert.deepEqual(pageErrors, [], `uncaught browser errors: ${pageErrors.join("; ")}`);
   console.log("Browser smoke checks passed.");
-  console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, workshop iframe open/close and blocked external fonts.");
+  console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, workshop iframe open/close, service-worker takeover and full offline reload.");
 } finally {
   if (browser) await browser.close();
   await new Promise((resolveClose) => server.close(resolveClose));
