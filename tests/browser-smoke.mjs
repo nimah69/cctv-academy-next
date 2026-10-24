@@ -105,7 +105,7 @@ try {
   await page.locator('[data-visual-next]').click();
   const nextChapterTitle = await page.evaluate(() => window.CCTVAcademyData.chapters[9].title);
   await page.getByRole("heading", { name: nextChapterTitle }).waitFor({ state: "visible" });
-  assert.equal(new URL(page.url()).hash, "#/visual/11");
+  assert.equal(new URL(page.url()).hash, "#/visual/10");
   await page.locator('[data-visual-prev]').click();
   const previousChapterTitle = await page.evaluate(() => window.CCTVAcademyData.chapters[8].title);
   await page.getByRole("heading", { name: previousChapterTitle }).waitFor({ state: "visible" });
