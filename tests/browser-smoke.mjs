@@ -81,6 +81,22 @@ try {
   assert.notEqual(passText, failText, "pass and fail outcomes must produce different feedback");
   assert.ok(failText.includes(scenario.why));
 
+  // Verify the new chapter infographic lab: all chapters, routing, animation controls and mobile width.
+  await page.goto(baseUrl + "#/visual/1", { waitUntil: "domcontentloaded" });
+  await page.locator("#view .visual-lab-page").waitFor({ state: "visible", timeout: 10000 });
+  assert.equal(await page.locator(".visual-chapter-btn").count(), 14, "all 14 chapters must have infographic navigation");
+  assert.equal(await page.evaluate(() => window.CCTVVisualLabScenes.length), 14, "each chapter needs its own visual scene data");
+  assert.equal(await page.locator("#visualDiagram").count(), 1);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    "visual lab must not introduce horizontal overflow at 390px");
+  await page.locator(".visual-chapter-btn").nth(8).click();
+  await page.getByRole("heading", { name: "عیب‌یابی حرفه‌ای CCTV" }).waitFor({ state: "visible" });
+  assert.equal(new URL(page.url()).hash, "#/visual/9", "selected infographic should have a shareable chapter route");
+  await page.locator('[data-visual-control="toggle"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن متوقف است" }).waitFor({ state: "visible" });
+  await page.locator('[data-visual-control="reset"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن از ابتدا اجرا شد" }).waitFor({ state: "visible" });
+
   // Test the workshop iframe opens and closes on a mobile viewport.
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator("#menuBtn").click();
@@ -190,7 +206,7 @@ try {
 
   assert.deepEqual(pageErrors, [], `uncaught browser errors: ${pageErrors.join("; ")}`);
   console.log("Browser smoke checks passed.");
-  console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, workshop iframe open/close and blocked external fonts.");
+  console.log("Covered: mobile/desktop layout, RTL, chapter routing, quiz save/reload, scenario feedback, retry/reset, 14 animated infographic chapters, visual chapter routing and pause/reset controls, workshop iframe open/close and blocked external fonts.");
 } finally {
   if (browser) await browser.close();
   await new Promise((resolveClose) => server.close(resolveClose));
