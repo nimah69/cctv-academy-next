@@ -103,10 +103,12 @@ try {
 
   // Verify chapter-to-chapter controls and the mobile navigation entry.
   await page.locator('[data-visual-next]').click();
-  await page.getByRole("heading", { name: "مفاهیم سخت و پرسش‌های تحلیلی" }).waitFor({ state: "visible" });
+  const nextChapterTitle = await page.evaluate(() => window.CCTVAcademyData.chapters[9].title);
+  await page.getByRole("heading", { name: nextChapterTitle }).waitFor({ state: "visible" });
   assert.equal(new URL(page.url()).hash, "#/visual/11");
   await page.locator('[data-visual-prev]').click();
-  await page.getByRole("heading", { name: "عیب‌یابی حرفه‌ای CCTV" }).waitFor({ state: "visible" });
+  const previousChapterTitle = await page.evaluate(() => window.CCTVAcademyData.chapters[8].title);
+  await page.getByRole("heading", { name: previousChapterTitle }).waitFor({ state: "visible" });
   assert.equal(new URL(page.url()).hash, "#/visual/9");
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator("#menuBtn").click();
