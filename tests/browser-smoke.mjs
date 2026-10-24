@@ -96,6 +96,21 @@ try {
   await page.getByRole("status").filter({ hasText: "انیمیشن متوقف است" }).waitFor({ state: "visible" });
   await page.locator('[data-visual-control="reset"]').click();
   await page.getByRole("status").filter({ hasText: "انیمیشن از ابتدا اجرا شد" }).waitFor({ state: "visible" });
+  await page.locator('[data-visual-control="toggle"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن در حال اجراست" }).waitFor({ state: "visible" });
+
+  // Verify chapter-to-chapter controls and the mobile navigation entry.
+  await page.locator('[data-visual-next]').click();
+  await page.getByRole("heading", { name: "مفاهیم سخت و پرسش‌های تحلیلی" }).waitFor({ state: "visible" });
+  assert.equal(new URL(page.url()).hash, "#/visual/11");
+  await page.locator('[data-visual-prev]').click();
+  await page.getByRole("heading", { name: "عیب‌یابی حرفه‌ای CCTV" }).waitFor({ state: "visible" });
+  assert.equal(new URL(page.url()).hash, "#/visual/9");
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.locator("#menuBtn").click();
+  await page.locator('[data-view="visualLab"]').first().click();
+  await page.locator("#view .visual-lab-page").waitFor({ state: "visible", timeout: 10000 });
+  assert.equal(new URL(page.url()).hash, "#/visual/1", "visual lab must be reachable from the app menu");
 
   // Test the workshop iframe opens and closes on a mobile viewport.
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
