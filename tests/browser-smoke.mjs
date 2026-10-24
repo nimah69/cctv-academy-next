@@ -81,6 +81,42 @@ try {
   assert.notEqual(passText, failText, "pass and fail outcomes must produce different feedback");
   assert.ok(failText.includes(scenario.why));
 
+  // Verify the new chapter infographic lab: all chapters, routing, animation controls and mobile width.
+  await page.goto(baseUrl + "#/visual/1", { waitUntil: "domcontentloaded" });
+  await page.locator("#view .visual-lab-page").waitFor({ state: "visible", timeout: 10000 });
+  assert.equal(await page.locator(".visual-chapter-btn").count(), 14, "all 14 chapters must have infographic navigation");
+  assert.equal(await page.evaluate(() => window.CCTVVisualLabScenes.length), 14, "each chapter needs its own visual scene data");
+  assert.equal(await page.locator("#visualDiagram").count(), 1);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    "visual lab must not introduce horizontal overflow at 390px");
+  await page.locator(".visual-chapter-btn").nth(8).click();
+  await page.getByRole("heading", { name: "عیب‌یابی حرفه‌ای CCTV" }).waitFor({ state: "visible" });
+  assert.equal(new URL(page.url()).hash, "#/visual/9", "selected infographic should have a shareable chapter route");
+  await page.locator('[data-visual-control="toggle"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن متوقف است" }).waitFor({ state: "visible" });
+  await page.locator('[data-visual-control="reset"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن از ابتدا اجرا شد" }).waitFor({ state: "visible" });
+  await page.locator('[data-visual-control="toggle"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن متوقف است" }).waitFor({ state: "visible" });
+  await page.locator('[data-visual-control="toggle"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن در حال اجراست" }).waitFor({ state: "visible" });
+
+  // Verify chapter-to-chapter controls and the mobile navigation entry.
+  await page.locator('[data-visual-next]').click();
+  const nextChapterTitle = await page.evaluate(() => window.CCTVAcademyData.chapters[9].title);
+  await page.getByRole("heading", { name: nextChapterTitle }).waitFor({ state: "visible" });
+  assert.equal(new URL(page.url()).hash, "#/visual/10");
+  await page.locator('[data-visual-prev]').click();
+  const previousChapterTitle = await page.evaluate(() => window.CCTVAcademyData.chapters[8].title);
+  await page.getByRole("heading", { name: previousChapterTitle }).waitFor({ state: "visible" });
+  assert.equal(new URL(page.url()).hash, "#/visual/9");
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await page.locator("#menuBtn").click();
+  await page.locator('[data-view="visualLab"]').first().click();
+  await page.locator("#view .visual-lab-page").waitFor({ state: "visible", timeout: 10000 });
+  assert.equal(new URL(page.url()).hash, "#/visual/1", "visual lab must be reachable from the app menu");
+
+
   // Test the workshop iframe opens and closes on a mobile viewport.
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator("#menuBtn").click();
