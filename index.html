@@ -3897,7 +3897,7 @@ window.addEventListener("popstate",()=>{saveStudyPosition();applyRouteFromHash(t
 window.addEventListener("pagehide",saveStudyPosition);
 window.addEventListener("scroll",()=>{if(state.view!=="lesson")return;updateLessonProgress();clearTimeout(window.__academyStudySaveTimer);window.__academyStudySaveTimer=setTimeout(saveStudyPosition,250)},{passive:true});
 window.CCTVAcademyHandleBack=function(){if((location.hash||"#/home")!=="#/home"){if(history.length>1)history.back();else{history.replaceState({academyRoute:true},"",routeHash("home",0));applyRouteFromHash(false)}return true}return false};
-if(!location.hash)history.replaceState({academyRoute:true},"",routeHash("home",0));applyRouteFromHash(true);
+if(!location.hash)history.replaceState({academyRoute:true},"",routeHash("home",0));if(!location.hash.startsWith("#/visual/"))applyRouteFromHash(true);
 </script>
 
 <nav class="bottom-nav" aria-label="ناوبری اصلی موبایل"><button data-view="home" type="button"><span aria-hidden="true"><svg class="ux-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span><small>خانه</small></button><button data-view="all" type="button"><span aria-hidden="true"><svg class="ux-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><small>درس‌ها</small></button><button data-view="quiz" type="button"><span aria-hidden="true"><svg class="ux-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span><small>آزمون</small></button><button data-view="cards" type="button"><span aria-hidden="true"><svg class="ux-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M7 3h13a1 1 0 011 1v11"/></svg></span><small>کارت‌ها</small></button><button data-view="tools" type="button"><span aria-hidden="true"><svg class="ux-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span><small>ابزارها</small></button><button data-view="visualLab" type="button"><span aria-hidden="true"><svg class="ux-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-4 3 2 3-5 2 7"/></svg></span><small>تصویر</small></button></nav>
@@ -5038,4 +5038,5 @@ function selectVisualChapter(index){
  state.visualChapter=index;state.visualPaused=false;const nextHash="#/visual/"+(index+1);if(location.hash!==nextHash)history.pushState({academyRoute:true},"",nextHash);
  render();window.scrollTo({top:0,behavior:window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
 }
+if(location.hash.indexOf("#/visual/")===0&&typeof applyRouteFromHash==="function")applyRouteFromHash(true);
 </script></body></html>
