@@ -96,8 +96,9 @@ try {
   await page.getByRole("status").filter({ hasText: "انیمیشن متوقف است" }).waitFor({ state: "visible" });
   await page.locator('[data-visual-control="reset"]').click();
   await page.getByRole("status").filter({ hasText: "انیمیشن از ابتدا اجرا شد" }).waitFor({ state: "visible" });
-  await page.locator('[data-visual-control="toggle"]').click();
   await page.getByRole("status").filter({ hasText: "انیمیشن در حال اجراست" }).waitFor({ state: "visible" });
+  await page.locator('[data-visual-control="toggle"]').click();
+  await page.getByRole("status").filter({ hasText: "انیمیشن متوقف است" }).waitFor({ state: "visible" });
 
   // Verify chapter-to-chapter controls and the mobile navigation entry.
   await page.locator('[data-visual-next]').click();
